@@ -1,14 +1,7 @@
-assets/*
-!assets/.gitignore
-protected/runtime/*
-!protected/runtime/.gitignore
-protected/data/*.db
-themes/classic/views/
-
 # yii console commands
-/application/yii
-/application/yii_test
-/application/yii_test.bat
+/yii
+/yii_test
+/yii_test.bat
 
 # phpstorm project files
 .idea
@@ -25,7 +18,7 @@ nbproject
 Thumbs.db
 
 # composer vendor dir
-/application/vendor
+/vendor
 
 # composer itself is not needed
 composer.phar
@@ -42,9 +35,9 @@ phpunit.phar
 /.vagrant
 
 # ignore generated files
-/public/web/index.php
-/public/web/index-test.php
-/public/web/robots.txt
-/application/backend/web/index.php
-/application/backend/web/index-test.php
-/application/backend/web/robots.txt
+/frontend/web/index.php
+/frontend/web/index-test.php
+/frontend/web/robots.txt
+/backend/web/index.php
+/backend/web/index-test.php
+/backend/web/robots.txt
