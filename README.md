@@ -56,3 +56,8 @@ $config = yii\helpers\ArrayHelper::merge(
 (new yii\web\Application($config))->run();
 ```
 
+## ADMIN AND FRONTEND
+
+For basic website, focus on the `frontend`, the `admin` folder can be deleted.
+
+

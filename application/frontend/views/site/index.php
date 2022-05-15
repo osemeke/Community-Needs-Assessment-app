@@ -4,8 +4,22 @@
 
 use yii\helpers\Url;
 use yii\helpers\Html;
+use \aryelds\sweetalert\SweetAlert;
 
-$this->title = 'My Yii Application';
+$this->title = 'DEMA Community Needs Assessment';
+
+
+foreach (Yii::$app->session->getAllFlashes() as $message) {
+    echo SweetAlert::widget([
+        'options' => [
+            'title' => (!empty($message['title'])) ? Html::encode($message['title']) : 'Title Not Set!',
+            'text' => (!empty($message['text'])) ? Html::encode($message['text']) : 'Text Not Set!',
+            'type' => (!empty($message['type'])) ? $message['type'] : SweetAlert::TYPE_INFO,
+            'timer' => (!empty($message['timer'])) ? $message['timer'] : 4000,
+            'showConfirmButton' => (!empty($message['showConfirmButton'])) ? $message['showConfirmButton'] : true
+        ]
+    ]);
+}
 ?>
 <style>
     .jumbotron {
@@ -30,7 +44,7 @@ $this->title = 'My Yii Application';
 
         <p class="lead">You can now help government know your needs directly.</p>
 
-        <p><a class="btn btn-lg btn-success" href="<?= Url::base() ?>/site/needs-assessment">Get started now</a></p>
+        <p><a class="btn btn-lg btn-success" href="<?= Url::base() ?>/site/contribution">Get started now</a></p>
     </div>
 
     <div class="body-content">

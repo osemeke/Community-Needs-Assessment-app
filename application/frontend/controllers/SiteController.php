@@ -11,10 +11,13 @@ use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
 use common\models\LoginForm;
+use frontend\models\Answer;
 use frontend\models\PasswordResetRequestForm;
 use frontend\models\ResetPasswordForm;
 use frontend\models\SignupForm;
 use frontend\models\ContactForm;
+use frontend\models\Quiz;
+use yii\base\Model;
 
 /**
  * Site controller
@@ -153,21 +156,82 @@ class SiteController extends Controller
      *
      * @return mixed
      */
-    public function actionNeedsAssessment()
-    {
-        $model = new ContactForm();
-        if ($model->load(Yii::$app->request->post()) && $model->validate()) {
-            if ($model->sendEmail(Yii::$app->params['adminEmail'])) {
-                Yii::$app->session->setFlash('success', 'Thank you for contacting us. We will respond to you as soon as possible.');
-            } else {
-                Yii::$app->session->setFlash('error', 'There was an error sending your message.');
-            }
 
-            return $this->refresh();
+    private function encrypt($id)
+    {
+        return (date("Ymd")) * 33 * $id;
+    }
+
+    private function decrypt($str)
+    {
+        return  $str/((date("Ymd")) * 33);
+    }
+
+    public function actionContribution()
+    {
+        $model = new \frontend\models\Contribution();
+        $model->date_created = time();
+        if ($this->request->isPost) {
+            if ($model->load($this->request->post()) && $model->save()) {
+                return $this->redirect(['quiz', 'id' => $this->encrypt($model->id)]);
+            }
+        } else {
+            $model->loadDefaultValues();
+        }
+        return $this->render('contribution', [
+            'model' => $model,
+        ]);
+    }
+
+    public function actionQuiz($id)
+    {
+        $id = $this->decrypt($id);
+        if (Answer::find()->where(['contribution_id' => $id])->count() > 0) return $this->redirect('index');
+
+        $quizzes = Quiz::find()
+            ->from('quiz')
+            ->joinWith('section', 'section.id = quiz.section_id')
+            ->where(['quiz.active' => 1, 'section.active' => 1])
+            ->orderby('section.sort_order,quiz.sort_order')
+            ->all();
+
+        $answers = [];
+        foreach ($quizzes as $quiz) {
+            $answer = new \frontend\models\Answer();
+            $answer->contribution_id = $id;
+            $answer->quiz_id = $quiz->id;
+            $answer->question = $quiz->question;
+            $answer->type = $quiz->input_type;
+            $answer->options = $quiz->getOptionsArray();
+            $answer->section = $quiz->section->description;
+            $answers[] = $answer;
         }
 
-        return $this->render('needs-assessment', [
-            'model' => $model,
+        if (Model::loadMultiple($answers, Yii::$app->request->post()) && Model::validateMultiple($answers)) {
+            foreach ($answers as $grade) {
+                $grade->save(false);
+            }
+
+            $contribution = \frontend\models\Contribution::findOne(['id' => $id]);
+            if ($contribution==null) exit();
+            $contribution->completed = 1;
+            $contribution->save(false);
+
+            // https://www.yiiframework.com/extension/aryelds/yii2-sweet-alert
+            Yii::$app->getSession()->setFlash('success', [
+                'text' => 'Thank you for contributing',
+                'title' => 'Form submitted',
+                'type' => 'success',
+                'timer' => 3000,
+                'showConfirmButton' => false
+            ]);
+
+            return $this->redirect('index');
+        }
+
+        return $this->render('quiz', [
+            'quizzes' => $quizzes,
+            'answers' => $answers,
         ]);
     }
 
